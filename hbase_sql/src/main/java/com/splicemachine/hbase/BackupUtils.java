@@ -307,7 +307,8 @@ public class BackupUtils {
                 lastActiveTimestamp = backupJobStatus.getLastActiveTimestamp();
                 long currentTimestamp = System.currentTimeMillis();
                 long elapsedTime = currentTimestamp - lastActiveTimestamp;
-                timedout = (lastActiveTimestamp > 0 && elapsedTime > 2 * BackupRestoreConstants.BACKUP_JOB_TIMEOUT);
+                long backupTimeout = HConfiguration.getConfiguration().getBackupTimeout();
+                timedout = (lastActiveTimestamp > 0 && elapsedTime > backupTimeout);
             } catch (Exception e) {
                 // The data cannot be parsed. It's either corrupted or a leftover from previous version. In either
                 // case, delete the znode.
