@@ -14,29 +14,15 @@
 
 package com.splicemachine.derby.impl;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-import com.splicemachine.db.catalog.types.RoutineAliasInfo;
-import com.splicemachine.db.iapi.sql.conn.StatementContext;
-import com.splicemachine.db.impl.jdbc.EmbedConnection;
-import com.splicemachine.client.SpliceClient;
-import com.splicemachine.si.data.hbase.ZkUpgradeK2;
-import com.splicemachine.utils.SpliceLogUtils;
-import org.apache.hadoop.security.SecurityUtil;
-import org.apache.log4j.Logger;
-import org.apache.spark.SparkConf;
-import org.apache.spark.SparkContext;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.rdd.RDDOperationScope;
-import org.apache.spark.sql.SparkSession;
-import scala.Tuple2;
 import com.splicemachine.EngineDriver;
 import com.splicemachine.access.HConfiguration;
 import com.splicemachine.access.api.SConfiguration;
+import com.splicemachine.client.SpliceClient;
 import com.splicemachine.concurrent.Clock;
 import com.splicemachine.concurrent.SystemClock;
+import com.splicemachine.db.catalog.types.RoutineAliasInfo;
+import com.splicemachine.db.iapi.sql.conn.StatementContext;
+import com.splicemachine.db.impl.jdbc.EmbedConnection;
 import com.splicemachine.derby.hbase.HBasePipelineEnvironment;
 import com.splicemachine.derby.lifecycle.DistributedDerbyStartup;
 import com.splicemachine.derby.lifecycle.EngineLifecycleService;
@@ -46,9 +32,29 @@ import com.splicemachine.hbase.ZkUtils;
 import com.splicemachine.pipeline.ContextFactoryDriverService;
 import com.splicemachine.pipeline.PipelineDriver;
 import com.splicemachine.pipeline.contextfactory.ContextFactoryDriver;
+import com.splicemachine.si.data.hbase.ZkUpgradeK2;
 import com.splicemachine.si.data.hbase.coprocessor.HBaseSIEnvironment;
 import com.splicemachine.si.impl.driver.SIDriver;
 import com.splicemachine.si.impl.readresolve.SynchronousReadResolver;
+import com.splicemachine.utils.SpliceLogUtils;
+import org.apache.hadoop.security.Credentials;
+import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.log4j.Logger;
+import org.apache.spark.SerializableWritable;
+import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.deploy.SparkHadoopUtil;
+import org.apache.spark.rdd.RDDOperationScope;
+import org.apache.spark.sql.SparkSession;
+import scala.Tuple2;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Iterator;
 
 public class SpliceSpark {
     private static Logger LOG = Logger.getLogger(SpliceSpark.class);
@@ -60,6 +66,9 @@ public class SpliceSpark {
     private static final String SCOPE_OVERRIDE = "spark.rdd.scope.noOverride";
     private static final String OLD_SCOPE_KEY = "spark.rdd.scope.old";
     private static final String OLD_SCOPE_OVERRIDE = "spark.rdd.scope.noOverride.old";
+    transient Credentials credentials = SparkHadoopUtil.get().getCurrentUserCredentials();
+    transient boolean appliedCredentials = false;
+    Broadcast<SerializableWritable<Credentials>> broadcastCredentials = null;
 
     // Sets both ctx and session
     public static synchronized SparkSession getSession() {
@@ -106,6 +115,36 @@ public class SpliceSpark {
         return !RegionServerLifecycleObserver.isHbaseJVM;
     }
 
+    public void applyCreds() throws IOException {
+        credentials = SparkHadoopUtil.get().getCurrentUserCredentials();
+
+        LOG.info("appliedCredentials:" + appliedCredentials + ",credentials:" + credentials);
+
+        if (!appliedCredentials && credentials != null) {
+            appliedCredentials = true;
+            logCredInformation(credentials);
+
+            UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
+            ugi.addCredentials(credentials);
+            // specify that this is a proxy user
+            ugi.setAuthenticationMethod(UserGroupInformation.AuthenticationMethod.PROXY);
+
+            ugi.addCredentials(broadcastCredentials.getValue().value());
+            LOG.info("Applied credentials");
+        }
+    }
+
+    private void logCredInformation(Credentials credentials2) {
+        LOG.info("credentials:" + credentials2);
+        for (int i =0 ; i < credentials2.getAllSecretKeys().size(); i++) {
+            LOG.info("getAllSecretKeys:" + i + ":" + credentials2.getAllSecretKeys().get(i));
+        }
+        Iterator it = credentials2.getAllTokens().iterator();
+        while (it.hasNext()) {
+            LOG.info("getAllTokens:" + it.next());
+        }
+    }
+
     public static synchronized void setupSpliceStaticComponents() throws IOException {
         try {
             if (!spliceStaticComponentsSetup && isRunningOnSpark()) {
@@ -117,6 +156,7 @@ public class SpliceSpark {
 
                 //make sure the configuration is correct
                 SConfiguration config=driver.getConfiguration();
+
                 //boot derby components
                 new EngineLifecycleService(new DistributedDerbyStartup(){
                     @Override public void distributedStart() throws IOException{ }
@@ -130,6 +170,7 @@ public class SpliceSpark {
 
                 EngineDriver engineDriver = EngineDriver.driver();
                 assert engineDriver!=null: "Not booted yet!";
+                LOG.info("SpliceMachine booted");
 
                 // Create a static statement context to enable nested connections
                 EmbedConnection internalConnection = (EmbedConnection)engineDriver.getInternalConnection();
@@ -309,5 +350,9 @@ public class SpliceSpark {
         session = SparkSession.builder().config(sparkContext.getConf()).getOrCreate();
         ctx = new JavaSparkContext(sparkContext);
         initialized = true;
+    }
+
+    public void setCredentialsBroadcast(Broadcast<SerializableWritable<Credentials>> broadcastCreds) {
+        broadcastCredentials = broadcastCreds;
     }
 }

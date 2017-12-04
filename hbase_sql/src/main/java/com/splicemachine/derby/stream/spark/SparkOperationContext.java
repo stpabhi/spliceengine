@@ -16,6 +16,7 @@ package com.splicemachine.derby.stream.spark;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ZeroCopyLiteralByteString;
+import com.splicemachine.client.SpliceClient;
 import com.splicemachine.db.iapi.error.StandardException;
 import com.splicemachine.db.iapi.sql.Activation;
 import com.splicemachine.derby.iapi.sql.execute.SpliceOperation;
@@ -27,10 +28,13 @@ import com.splicemachine.derby.stream.iapi.OperationContext;
 import com.splicemachine.si.api.txn.TxnView;
 import com.splicemachine.derby.stream.control.BadRecordsRecorder;
 import com.splicemachine.stream.accumulator.BadRecordsAccumulator;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
 import org.apache.spark.Accumulable;
+import org.apache.spark.SparkFiles;
 import org.apache.spark.util.LongAccumulator;
 import java.io.*;
+import java.security.PrivilegedExceptionAction;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -164,7 +168,26 @@ public class SparkOperationContext<Op extends SpliceOperation> implements Operat
         badRecordsSeen = in.readLong();
         badRecordThreshold = in.readLong();
         permissive=in.readBoolean();
-        SpliceSpark.setupSpliceStaticComponents();
+        if(!SpliceClient.isClient) {
+            String keytab = SparkFiles.get("example.keytab");
+            String principal = "test@EXAMPLE.COM";
+            LOG.info("Executor keytab " + keytab);
+            LOG.info("Principal " + principal);
+            UserGroupInformation ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal, keytab);
+            UserGroupInformation.setLoginUser(ugi);
+            try {
+                ugi.doAs((PrivilegedExceptionAction<Void>) () -> {
+                    LOG.info("Booting headless splice from SOC");
+                    SpliceSpark.setupSpliceStaticComponents();
+                    return null;
+                });
+            } catch (InterruptedException e) {
+                LOG.error(e);
+            }
+            ugi.checkTGTAndReloginFromKeytab();
+        } else {
+            SpliceSpark.setupSpliceStaticComponents();
+        }
         boolean isOp=in.readBoolean();
         if(isOp){
             broadcastedActivation = (BroadcastedActivation)in.readObject();

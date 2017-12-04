@@ -14,7 +14,7 @@
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>hbase_sql-${envClassifier}</artifactId>
+    <artifactId>hbase_sql-cdh5.8.3</artifactId>
     <description>SQL engine based on HBase</description>
     <parent>
         <artifactId>spliceengine-parent</artifactId>
@@ -29,8 +29,8 @@
         <start.script>${project.basedir}/src/test/bin/start-splice-its</start.script>
         <stop.script>${project.basedir}/src/test/bin/stop-splice-its</stop.script>
         <ee_out/>
-        <skipTests>${maven.skip.tests}</skipTests>
-        <skip.dep.copy>${skipSparkPrepare}</skip.dep.copy>
+        <skipTests>true</skipTests>
+        <skip.dep.copy></skip.dep.copy>
     </properties>
     <dependencies>
         <!--
@@ -154,7 +154,7 @@
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-server</artifactId>
-            <version>${hbase.version}</version>
+            <version>1.2.0-cdh5.8.3</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -229,12 +229,12 @@
 
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>hbase_storage-${envClassifier}</artifactId>
+            <artifactId>hbase_storage-cdh5.8.3</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>hbase_pipeline-${envClassifier}</artifactId>
+            <artifactId>hbase_pipeline-cdh5.8.3</artifactId>
             <version>${project.version}</version>
             <exclusions>
                 <exclusion>
@@ -246,7 +246,7 @@
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-client</artifactId>
-            <version>${hbase.version}</version>
+            <version>1.2.0-cdh5.8.3</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.jboss.netty</groupId>
@@ -269,14 +269,14 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_${scala.binary.version}</artifactId>
-            <version>${kafka.version}</version>
+            <version>0.10.0-kafka-2.1.0</version>
             <classifier>test</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_${scala.binary.version}</artifactId>
-            <version>${kafka.version}</version>
+            <version>0.10.0-kafka-2.1.0</version>
         </dependency>
 
         <!--Test dependencies -->
@@ -296,7 +296,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>hbase_storage-${envClassifier}</artifactId>
+            <artifactId>hbase_storage-cdh5.8.3</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
@@ -304,7 +304,7 @@
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-testing-util</artifactId>
-            <version>${hbase.version}</version>
+            <version>1.2.0-cdh5.8.3</version>
             <!--intentionally compile scope,we use this dependency at app compile and runtime-->
             <scope>test</scope>
             <exclusions>
@@ -333,7 +333,7 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
-            <version>${hadoop.version}</version>
+            <version>2.6.0-cdh5.8.3</version>
 	    <exclusions>
 		    <exclusion>
 			    <groupId>asm</groupId>
@@ -354,17 +354,17 @@
 	<dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-distcp</artifactId>
-            <version>${hadoop.version}</version>
+            <version>2.6.0-cdh5.8.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
-            <version>${hadoop.version}</version>
+            <version>2.6.0-cdh5.8.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-aws</artifactId>
-            <version>${hadoop.version}</version>
+            <version>2.6.0-cdh5.8.3</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.fasterxml.jackson.core</groupId>
@@ -387,13 +387,13 @@
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-beeline</artifactId>
-            <version>${hive.version}</version>
+            <version>1.1.0-cdh5.8.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-cli</artifactId>
-            <version>${hive.version}</version>
+            <version>1.1.0-cdh5.8.3</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -411,7 +411,7 @@
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-common</artifactId>
             <scope>provided</scope>
-            <version>${hive.version}</version>
+            <version>1.1.0-cdh5.8.3</version>
 	    <exclusions>
 		    <exclusion>
 			    <groupId>asm</groupId>
@@ -436,7 +436,7 @@
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-contrib</artifactId>
             <scope>provided</scope>
-            <version>${hive.version}</version>
+            <version>1.1.0-cdh5.8.3</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.hive</groupId>
@@ -449,7 +449,7 @@
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-hbase-handler</artifactId>
             <scope>provided</scope>
-            <version>${hive.version}</version>
+            <version>1.1.0-cdh5.8.3</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.hive</groupId>
@@ -461,7 +461,7 @@
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-hwi</artifactId>
             <scope>provided</scope>
-            <version>${hive.version}</version>
+            <version>1.1.0-cdh5.8.3</version>
 	    <exclusions>
 		    <exclusion>
 			    <groupId>asm</groupId>
@@ -477,13 +477,13 @@
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-jdbc</artifactId>
             <scope>provided</scope>
-            <version>${hive.version}</version>
+            <version>1.1.0-cdh5.8.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-service</artifactId>
             <scope>provided</scope>
-            <version>${hive.version}</version>
+            <version>1.1.0-cdh5.8.3</version>
 	    <exclusions>
 		    <exclusion>
 			    <groupId>asm</groupId>
@@ -498,12 +498,12 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-yarn-common</artifactId>
-            <version>${hadoop.version}</version>
+            <version>2.6.0-cdh5.8.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-yarn-client</artifactId>
-            <version>${hadoop.version}</version>
+            <version>2.6.0-cdh5.8.3</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -515,28 +515,28 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-yarn-server-common</artifactId>
-            <version>${hadoop.version}</version>
+            <version>2.6.0-cdh5.8.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-yarn-server-nodemanager</artifactId>
-            <version>${hadoop.version}</version>
+            <version>2.6.0-cdh5.8.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
-            <version>${hadoop.version}</version>
+            <version>2.6.0-cdh5.8.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-yarn-server-tests</artifactId>
-            <version>${hadoop.version}</version>
+            <version>2.6.0-cdh5.8.3</version>
             <classifier>tests</classifier>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-shuffle</artifactId>
-            <version>${hadoop.version}</version>
+            <version>2.6.0-cdh5.8.3</version>
         </dependency>
         <dependency>
             <groupId>commons-dbutils</groupId>
@@ -549,7 +549,7 @@
         </dependency>
         <dependency>
             <groupId>com.splicemachine</groupId>
-            <artifactId>hbase_storage-${envClassifier}</artifactId>
+            <artifactId>hbase_storage-cdh5.8.3</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
@@ -794,14 +794,14 @@
                                         <exec executable="${shell.command}" dir="${basedir}" spawn="false">
                                             <arg value="${start.script}"/>
                                             <arg value="-c"/>
-                                            <arg value="-p ${envClassifier},${envHbase}${ee_out}"/>
+                                            <arg value="-p cdh5.8.3,hbase1.2.0${ee_out}"/>
                                         </exec>
                                     </then>
                                     <else>
                                         <!-- chaos monkey overridden: -DfailTasksRandomly=false -->
                                         <exec executable="${shell.command}" dir="${basedir}" spawn="false">
                                             <arg value="${start.script}"/>
-                                            <arg value="-p ${envClassifier},${envHbase}${ee_out}"/>
+                                            <arg value="-p cdh5.8.3,hbase1.2.0${ee_out}"/>
                                         </exec>
                                     </else>
                                 </if>
@@ -880,7 +880,7 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>${envHbase}/src/main/java</source>
+                                <source>hbase1.2.0/src/main/java</source>
                             </sources>
                         </configuration>
                     </execution>
@@ -892,7 +892,7 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>${envHbase}/src/test/java</source>
+                                <source>hbase1.2.0/src/test/java</source>
                             </sources>
                         </configuration>
                     </execution>
@@ -901,7 +901,7 @@
         </plugins>
         <resources>
             <resource>
-                <directory>${envHbase}/src/main/resources</directory>
+                <directory>hbase1.2.0/src/main/resources</directory>
             </resource>
             <resource>
                 <directory>src/main/resources</directory>
@@ -1131,7 +1131,7 @@
                                 <argument>-Dcom.sun.management.jmxremote.port=10102</argument>
                                 <argument>-Dsplice.authentication=NATIVE</argument>
                                 <argument>-Dcom.splicemachine.enableLegacyAsserts=true</argument>
-				<argument>-Djava.library.path=${project.build.directory}/../../assembly/${envClassifier}/native/${os.detected.classifier}:/usr/local/lib/</argument>
+				<argument>-Djava.library.path=${project.build.directory}/../../assembly/cdh5.8.3/native/${os.detected.classifier}:/usr/local/lib/</argument>
                                 <argument>-Xmx6g</argument>
                                 <argument>-Xms1g</argument>
                                 <!-- Spark Sys props -->
@@ -1152,12 +1152,12 @@
                                 <argument>
                                     -Dsplice.spark.executor.extraClassPath=${project.build.directory}/classes:${project.build.directory}/dependency/*
                                 </argument>
-                                <argument>-Dspark.executor.extraLibraryPath=${project.build.directory}/../../assembly/${envClassifier}/native/${os.detected.classifier}</argument>
+                                <argument>-Dspark.executor.extraLibraryPath=${project.build.directory}/../../assembly/cdh5.8.3/native/${os.detected.classifier}</argument>
                                 <argument>
                                     -Dspark.yarn.jars=${project.build.directory}/classes,${project.build.directory}/dependency/*
                                 </argument>
 
-				<argument>-Djava.library.path=${project.build.directory}/../../assembly/${envClassifier}/native/${os.detected.classifier}:/usr/local/lib/</argument>
+				<argument>-Djava.library.path=${project.build.directory}/../../assembly/cdh5.8.3/native/${os.detected.classifier}:/usr/local/lib/</argument>
 
                                 <argument>-Dsplice.spark.executor.instances=1</argument>
                                 <argument>-Dsplice.spark.executor.memory=2g</argument>
@@ -1254,7 +1254,7 @@
                                 <argument>-Djava.awt.headless=true</argument>
                                 <argument>-Dlog4j.configuration=${log4j.config.uri}</argument>
                                 <argument>-Djava.net.preferIPv4Stack=true</argument>
-				<argument>-Djava.library.path=${project.build.directory}/../../assembly/${envClassifier}/native/${os.detected.classifier}:/usr/local/lib/</argument>
+				<argument>-Djava.library.path=${project.build.directory}/../../assembly/cdh5.8.3/native/${os.detected.classifier}:/usr/local/lib/</argument>
                                 <argument>-Xmx4g</argument>
                                 <argument>-Xmn128m</argument>
                                 <argument>-XX:+UseConcMarkSweepGC</argument>
@@ -1375,7 +1375,7 @@
                                 <argument>-Dzookeeper.sasl.client=false</argument>
                                 <argument>-Dcom.sun.management.jmxremote.ssl=false</argument>
                                 <argument>-Dcom.sun.management.jmxremote.authenticate=false</argument>
-                                <argument>-Djava.library.path=${project.build.directory}/../../assembly/${envClassifier}/native/${os.detected.classifier}:/usr/local/lib/</argument>
+                                <argument>-Djava.library.path=${project.build.directory}/../../assembly/cdh5.8.3/native/${os.detected.classifier}:/usr/local/lib/</argument>
 				<argument>org.apache.spark.deploy.history.HistoryServer</argument>
 				<argument>${project.build.directory}/SpliceTestYarnPlatform/</argument>
                             </arguments>

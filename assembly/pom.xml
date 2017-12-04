@@ -94,7 +94,25 @@
                                     <exclude>com.splicemachine:db-tools-ij</exclude>
                                     <exclude>com.splicemachine:db-shared</exclude>
                                     <exclude>com.splicemachine:db-drda</exclude>
-                                    <exclude>${extraExclude}</exclude>
+                                    <exclude>com.splicemachine:db-engine</exclude>
+                                    <exclude>com.splicemachine:hbase_sql-${envClassifier}</exclude>
+                                    <exclude>com.splicemachine:hbase_storage-${envClassifier}</exclude>
+                                    <exclude>com.splicemachine:hbase_pipeline-${envClassifier}</exclude>
+                                    <exclude>com.splicemachine:pipeline_api</exclude>
+                                    <exclude>com.splicemachine:splice_access_api</exclude>
+                                    <exclude>com.splicemachine:splice_si_api</exclude>
+                                    <exclude>com.splicemachine:splice_timestamp_api</exclude>
+                                    <exclude>com.splicemachine:splice_encoding</exclude>
+                                    <exclude>com.splicemachine:splice_machine</exclude>
+                                    <exclude>com.splicemachine:splice_protocol</exclude>
+                                    <exclude>com.splicemachine:utilities</exclude>
+                                    <exclude>io.dropwizard.metrics:metrics-core</exclude>
+                                    <exclude>io.dropwizard.metrics:metrics-graphite</exclude>
+                                    <exclude>io.dropwizard.metrics:metrics-json</exclude>
+                                    <exclude>io.dropwizard.metrics:metrics-jvm</exclude>
+                                    <exclude>com.yammer.metrics:metrics-core</exclude>
+                                    <exclude>org.apache.spark:*</exclude>
+                                    <exclude>org.apache.kafka:*</exclude>
                                 </excludes>
                             </artifactSet>
 
@@ -236,11 +254,25 @@
                                 db-tools-ij,
                                 db-shared,
                                 db-drda,
+                                db-engine,
                                 javax.servlet-api,
-                                javax.ws.rs-api
+                                javax.ws.rs-api,
+                                hbase_sql-${envClassifier},
+                                hbase_pipeline-${envClassifier},
+                                hbase_storage-${envClassifier},
+                                pipeline_api,
+                                splice_access_api,
+                                splice_si_api,
+                                splice_timestamp_api,
+                                splice_encoding,
+                                splice_machine,
+                                splice_protocol,
+                                utilities,
+                                metrics-core,
+                                metrics-graphite,
+                                metrics-json,
+                                metrics-jvm
                             </includeArtifactIds>
-
-
                         </configuration>
                     </execution>
                 </executions>
@@ -249,51 +281,6 @@
     </build>
 
     <profiles>
-        <profile>
-            <id>cdh5.6.0</id>
-            <properties><extraExclude>org.apache.spark:*</extraExclude></properties>
-        </profile>
-        <profile>
-            <id>cdh5.6.1</id>
-            <properties><extraExclude>org.apache.spark:*</extraExclude></properties>
-        </profile>
-        <profile>
-            <id>cdh5.7.2</id>
-            <properties><extraExclude>org.apache.spark:*</extraExclude></properties>
-        </profile>
-        <profile>
-            <id>cdh5.7.3</id>
-            <properties><extraExclude>org.apache.spark:*</extraExclude></properties>
-        </profile>
-        <profile>
-            <id>cdh5.7.4</id>
-            <properties><extraExclude>org.apache.spark:*</extraExclude></properties>
-        </profile>
-        <profile>
-            <id>cdh5.7.5</id>
-            <properties><extraExclude>org.apache.spark:*</extraExclude></properties>
-        </profile>
-        <profile>
-            <id>cdh5.8.0</id>
-            <properties><extraExclude>org.apache.spark:*</extraExclude></properties>
-        </profile>
-        <profile>
-            <id>cdh5.8.2</id>
-            <properties><extraExclude>org.apache.spark:*</extraExclude></properties>
-        </profile>
-        <profile>
-            <id>cdh5.8.3</id>
-            <properties><extraExclude>org.apache.spark:*</extraExclude></properties>
-        </profile>
-        <profile>
-            <id>cdh5.9.0</id>
-            <properties><extraExclude>org.apache.spark:*</extraExclude></properties>
-        </profile>
-        <profile>
-            <id>cdh5.12.0</id>
-            <properties><extraExclude>org.apache.spark:*</extraExclude></properties>
-        </profile>
-
         <profile>
             <id>ee</id>
             <activation>
