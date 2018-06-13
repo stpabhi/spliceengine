@@ -1,0 +1,81 @@
+<!--
+  ~ Copyright (c) 2012 - 2017 Splice Machine, Inc.
+  ~
+  ~ This file is part of Splice Machine.
+  ~ Splice Machine is free software: you can redistribute it and/or modify it under the terms of the
+  ~ GNU Affero General Public License as published by the Free Software Foundation, either
+  ~ version 3, or (at your option) any later version.
+  ~ Splice Machine is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~ See the GNU Affero General Public License for more details.
+  ~ You should have received a copy of the GNU Affero General Public License along with Splice Machine.
+  ~ If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		  xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+	<id>${envClassifier}${obfuscate.si.tag}_complete</id>
+
+	<formats>
+		<format>jar</format>
+	</formats>
+
+	<includeBaseDirectory>false</includeBaseDirectory>
+
+	<dependencySets>
+
+		<dependencySet>
+			<unpack>true</unpack>
+			<unpackOptions>
+				<excludes>
+					<exclude>**/hbase-log4j.properties</exclude>
+					<exclude>**/trace-log4j.properties</exclude>
+					<exclude>**/splice-site.xml</exclude>
+				</excludes>
+			</unpackOptions>
+			<includes>
+				<!-- splice artifacts -->
+                <include>com.splicemachine:*</include>
+				<!-- third party artifacts -->
+				<include>com.carrotsearch:hppc</include>
+				<include>com.esotericsoftware.kryo:kryo</include>
+				<include>com.google.code.gson:gson</include> 
+				<include>com.google.protobuf:protobuf-java</include>
+				<include>com.lmax:disruptor</include>
+				<include>de.javakaffee:kryo-serializers</include>
+				<include>net.sf.ehcache:ehcache-core</include>
+				<include>net.sf.opencsv:opencsv</include>
+				<include>net.sf.supercsv:super-csv</include>
+				<include>org.apache.lucene:lucene-core</include>
+				<include>org.apache.spark</include>				
+				<include>com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru</include>
+			</includes>
+		</dependencySet>
+
+	</dependencySets>
+
+	<fileSets>
+
+		<fileSet>
+			<directory>lib/native</directory>
+			<includes>
+				<include>*/**</include>
+			</includes>
+			<outputDirectory>/lib/native</outputDirectory>
+		</fileSet>
+
+		<fileSet>
+			<directory>${project.build.outputDirectory}</directory>
+			<outputDirectory>/</outputDirectory>
+			<useDefaultExcludes>true</useDefaultExcludes>
+			<excludes>
+				<exclude>**/hbase-log4j.properties</exclude>
+				<exclude>**/trace-log4j.properties</exclude>
+				<exclude>**/splice-site.xml</exclude>
+			</excludes>
+		</fileSet>
+
+	</fileSets>
+
+</assembly>
+

@@ -1,0 +1,278 @@
+/*
+ * Copyright (c) 2012 - 2017 Splice Machine, Inc.
+ *
+ * This file is part of Splice Machine.
+ * Splice Machine is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either
+ * version 3, or (at your option) any later version.
+ * Splice Machine is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
+ * You should have received a copy of the GNU Affero General Public License along with Splice Machine.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.splicemachine.access.client;
+
+import com.splicemachine.mrio.MRConstants;
+import com.splicemachine.si.constants.SIConstants;
+import com.splicemachine.utils.SpliceLogUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
+import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.HRegionInfo;
+import org.apache.hadoop.hbase.client.IsolationLevel;
+import org.apache.hadoop.hbase.client.RegionInfo;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.TableDescriptor;
+import org.apache.hadoop.hbase.regionserver.BaseHRegionUtil;
+import org.apache.hadoop.hbase.regionserver.HRegion;
+import org.apache.hadoop.hbase.regionserver.KeyValueScanner;
+import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.ProxiedFilesystem;
+import org.apache.hadoop.security.AccessControlException;
+import org.apache.log4j.Logger;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * 
+ * 
+ */
+public abstract class SkeletonClientSideRegionScanner implements RegionScanner{
+    private boolean isClosed = false;
+    private static final Logger LOG = Logger.getLogger(SkeletonClientSideRegionScanner.class);
+	private HRegion region;
+	private RegionScanner scanner;
+	private Configuration conf;
+	private FileSystem fs;
+	private Path rootDir;
+	private TableDescriptor htd;
+	private RegionInfo hri;
+	private Scan scan;
+    private String hostAndPort;
+	private Cell topCell;
+	private List<KeyValueScanner>	memScannerList = new ArrayList<>(1);
+	private boolean flushed;
+	private long numberOfRows = 0;
+    private FileSystem customFilesystem;
+
+	
+	public SkeletonClientSideRegionScanner(Configuration conf,
+                                           FileSystem fs,
+                                           Path rootDir,
+                                           TableDescriptor htd,
+                                           RegionInfo hri,
+                                           Scan scan, String hostAndPort) throws IOException {
+		if (LOG.isDebugEnabled())
+			SpliceLogUtils.debug(LOG, "init for regionInfo=%s, scan=%s", hri,scan);
+		scan.setIsolationLevel(IsolationLevel.READ_UNCOMMITTED);
+		this.conf = conf;
+		this.fs = fs;
+		this.rootDir = rootDir;
+		this.htd = htd;
+		this.hri = new SpliceHRegionInfo((HRegionInfo)hri);
+		this.scan = scan;
+        this.hostAndPort = hostAndPort;
+	}
+
+    @Override
+	public void close() throws IOException {
+        if (isClosed)
+            return;
+		if (LOG.isDebugEnabled())
+			SpliceLogUtils.debug(LOG, "close");
+		if (scanner != null)
+			scanner.close();
+		memScannerList.get(0).close();
+        region.close();
+        if (customFilesystem != null)
+            customFilesystem.close();
+        isClosed = true;
+    }
+
+    @Override
+	public RegionInfo getRegionInfo() {
+		return scanner.getRegionInfo();
+	}
+
+    @Override
+	public boolean reseek(byte[] row) throws IOException {
+		return scanner.reseek(row);
+	}
+
+    @Override
+	public long getMvccReadPoint() {
+		return scanner.getMvccReadPoint();
+	}
+
+    public boolean next(List<Cell> result,int limit) throws IOException{
+        return nextRaw(result,limit);
+    }
+
+    @Override
+    public boolean next(List<Cell> results) throws IOException{
+        return nextRaw(results);
+    }
+
+    public boolean nextRaw(List<Cell> result,int limit) throws IOException{
+        return nextRaw(result);
+    }
+
+    @Override
+    public long getMaxResultSize(){
+        return scanner.getMaxResultSize();
+    }
+
+    @Override
+    public boolean isFilterDone() throws IOException{
+        return scanner.isFilterDone();
+    }
+
+    @Override
+	public boolean nextRaw(List<Cell> result) throws IOException {
+    	boolean res = nextMerged(result);
+        boolean returnValue = updateTopCell(res,result);
+        if (returnValue)
+            numberOfRows++;
+		return returnValue;
+	}
+
+
+	/**
+	 * refresh underlying RegionScanner we call this when new store file gets
+	 * created by MemStore flushes or current scanner fails due to compaction
+	 */
+	public void updateScanner() throws IOException {
+            if (LOG.isDebugEnabled()) {
+                SpliceLogUtils.debug(LOG,
+                        "updateScanner with hregionInfo=%s, tableName=%s, rootDir=%s, scan=%s",
+                        hri, htd.getTableName().getNameAsString(), rootDir, scan);
+            }
+            if (flushed) {
+                if (LOG.isDebugEnabled())
+                    SpliceLogUtils.debug(LOG, "Flush occurred");
+                if (this.topCell != null) {
+                    if (LOG.isDebugEnabled())
+                        SpliceLogUtils.debug(LOG, "setting start row to %s", topCell);
+                    //noinspection deprecation
+                    scan.setStartRow(Bytes.add(CellUtil.cloneRow(topCell), new byte[]{0}));
+                }
+            }
+            memScannerList.add(getMemStoreScanner());
+            this.region = openHRegion();
+            RegionScanner regionScanner = new CountingRegionScanner(BaseHRegionUtil.getScanner(region, scan, memScannerList), region, scan);
+            if (flushed) {
+                if (scanner != null)
+                    scanner.close();
+            }
+            scanner = regionScanner;
+	}
+
+    public HRegion getRegion(){
+        return region;
+    }
+
+    /* ****************************************************************************************************************/
+    /*private helper methods*/
+
+    private boolean updateTopCell(boolean response, List<Cell> results) throws IOException {
+        if (!results.isEmpty() &&
+                CellUtil.matchingFamily(results.get(0),ClientRegionConstants.FLUSH)){
+            if (LOG.isDebugEnabled())
+                SpliceLogUtils.debug(LOG,"received flush message " + results.get(0));
+            flushed = true;
+            updateScanner();
+            flushed = false;
+            results.clear();
+            return nextRaw(results);
+        } else
+        if (response)
+            topCell = results.get(results.size() - 1);
+        return response;
+    }
+
+    private boolean matchingFamily(List<Cell> result, byte[] family) {
+        return result.isEmpty()?false:CellUtil.matchingFamily(result.get(0),family);
+    }
+
+    private boolean nextMerged(List<Cell> result) throws IOException {
+        boolean res = scanner.nextRaw(result);
+        // Drain HoldTimestamps
+        if (matchingFamily(result,ClientRegionConstants.HOLD)) {
+            // Second Hold, null out scanner
+            if (result.get(0).getTimestamp()== HConstants.LATEST_TIMESTAMP) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Second hold, close scanner");
+                }
+                result.clear();
+                return false;
+            }
+            else { // First Hold, traverse to real records.
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("First hold, skip to real records");
+                }
+                result.clear();
+                return nextMerged(result);
+            }
+        }
+        return res;
+    }
+
+    private HRegion openHRegion() throws IOException {
+        try {
+            return HRegion.openHRegion(conf, fs, rootDir, hri, ReadOnlyTableDescriptor.newBuilder(htd), null, null, null);
+        } catch (AccessControlException e) {
+            // Our user doesn't have direct HBase access in HDFS, let's try to get proxy access through SpliceMachine
+            if (fs instanceof DistributedFileSystem) {
+                String connectionURL = conf.get(MRConstants.SPLICE_CONNECTION_STRING);
+                if (connectionURL != null) {
+                    customFilesystem = new ProxiedFilesystem((DistributedFileSystem) fs, connectionURL);
+                    customFilesystem.initialize(fs.getUri(), fs.getConf());
+                    return HRegion.openHRegion(conf, customFilesystem, rootDir, hri, ReadOnlyTableDescriptor.newBuilder(htd), null, null, null);
+                }
+            }
+            throw e;
+        }
+    }
+
+    private KeyValueScanner getMemStoreScanner() throws IOException {
+        Scan memScan = new Scan(scan);
+        memScan.setAttribute(ClientRegionConstants.SPLICE_SCAN_MEMSTORE_ONLY,SIConstants.TRUE_BYTES);
+        memScan.setAttribute(ClientRegionConstants.SPLICE_SCAN_MEMSTORE_PARTITION_BEGIN_KEY, hri.getStartKey());
+        memScan.setAttribute(ClientRegionConstants.SPLICE_SCAN_MEMSTORE_PARTITION_END_KEY, hri.getEndKey());
+        memScan.setAttribute(ClientRegionConstants.SPLICE_SCAN_MEMSTORE_PARTITION_SERVER,Bytes.toBytes(hostAndPort));
+        memScan.setAttribute(SIConstants.SI_NEEDED,null);
+        ResultScanner scanner=newScanner(memScan);
+        // We want to request the first row from the Memstore scanner to make sure the region is
+        // open and possible pending edits have been replayed. The MemstoreKeyValueScanner doest that for us.
+        // Make sure the reply is ClientRegionConstants.MEMSTORE_BEGIN
+        MemstoreKeyValueScanner memScanner = new MemstoreKeyValueScanner(scanner);
+        Cell current = memScanner.current();
+        assert current != null;
+        assert matchingFamily(Arrays.asList(current), ClientRegionConstants.HOLD);
+        assert current.getTimestamp() == 0;
+        return memScanner;
+    }
+
+    protected abstract ResultScanner newScanner(Scan memScan) throws IOException;
+
+    @Override
+    public String toString() {
+        return String.format("SkeletonClienSideregionScanner[scan=%s,region=%s,numberOfRows=%d",scan,region.getRegionInfo(),numberOfRows);
+    }
+
+    public Cell getTopCell() {
+        return topCell;
+    }
+
+}

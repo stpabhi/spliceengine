@@ -35,19 +35,19 @@ _kill_em_all () {
 export -f _kill_em_all
 
 BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-DEFAULT_PROFILE="cdh5.8.3"  # default hbase platform profile
+DEFAULT_PROFILE="cdh6.0.0"  # default hbase platform profile
 PROFILE=$DEFAULT_PROFILE
 IN_MEM_PROFILE="mem"
-RUN_DIR="${BASE_DIR}/hbase_sql"
+RUN_DIR="${BASE_DIR}/hbase_sql_v2"
 
 BUILD="1"
 CLEAN="1"
 CHAOS="false"
 
-MEMBERS=2
+MEMBERS=1
 DEBUG_PATH=""
 
-MVN='mvn -B'
+MVN='mvn -o -B'
 MVNDBG='mvnDebug -B'
 
 usage() {
@@ -174,14 +174,14 @@ if [ ${COUNT} -eq 0 ]; then
     exit 5
 fi
 
-YARN_LOG="${RUN_DIR}/yarn.log"
-echo "Starting YARN. Log file is ${YARN_LOG}"
-(${MVN} exec:java -P${PROFILE},spliceYarn > ${YARN_LOG} 2>&1) &  ## YARN
+#YARN_LOG="${RUN_DIR}/yarn.log"
+#echo "Starting YARN. Log file is ${YARN_LOG}"
+#(${MVN} exec:java -P${PROFILE},spliceYarn > ${YARN_LOG} 2>&1) &  ## YARN
 
-KAFKALOG="${RUN_DIR}"/kafka.log
-# Start Kafka in background.
-echo "Starting Kafka, log file is ${KAFKALOG}"
-(${MVN} exec:exec -P${PROFILE},spliceKafka > ${KAFKALOG} 2>&1) &
+#KAFKALOG="${RUN_DIR}"/kafka.log
+## Start Kafka in background.
+#echo "Starting Kafka, log file is ${KAFKALOG}"
+#(${MVN} exec:exec -P${PROFILE},spliceKafka > ${KAFKALOG} 2>&1) &
 
 SPLICE_LOG="${RUN_DIR}/splice.log"
 echo "Starting Master and 1 Region Server. Log file is ${SPLICE_LOG}"

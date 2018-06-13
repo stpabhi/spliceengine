@@ -23,7 +23,7 @@ public interface PartitionLoad{
 
     int getMemStoreSizeMB();
 
-    int getStorefileIndexSizeMB();
+    long getStorefileIndexSizeKB();
 
     String getPartitionName();
 }

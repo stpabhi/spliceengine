@@ -1,0 +1,151 @@
+<!--
+  ~ Copyright (c) 2012 - 2017 Splice Machine, Inc.
+  ~
+  ~ This file is part of Splice Machine.
+  ~ Splice Machine is free software: you can redistribute it and/or modify it under the terms of the
+  ~ GNU Affero General Public License as published by the Free Software Foundation, either
+  ~ version 3, or (at your option) any later version.
+  ~ Splice Machine is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~ See the GNU Affero General Public License for more details.
+  ~ You should have received a copy of the GNU Affero General Public License along with Splice Machine.
+  ~ If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!-- = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+Assembly descriptor for our demo/stand-alone package.
+
+Creates a single TAR file with everything necessary to run splice.  Currently
+makes a 1 master + 1 region-server cluster available.
+
+TAR structure:
+
+   splicemachine/
+       lib/
+       bin/
+       demodata/
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =  -->
+<assembly xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+		  xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+	<id>${envClassifier}${obfuscate.si.tag}_standalone</id>
+
+	<formats>
+		<format>tar.gz</format>
+	</formats>
+
+	<includeBaseDirectory>false</includeBaseDirectory>
+
+	<!-- DEPENDENCIES: includes these artifacts from the pom. -->
+	<dependencySets>
+
+		<dependencySet>
+			<outputDirectory>splicemachine/lib</outputDirectory>
+			<scope>runtime</scope>
+			<useProjectArtifact>false</useProjectArtifact>
+		</dependencySet>
+
+		<dependencySet>
+			<outputDirectory>splicemachine/lib</outputDirectory>
+			<scope>runtime</scope>
+			<useProjectArtifact>false</useProjectArtifact>
+			<unpack>false</unpack>
+			<includes>
+				<include>com.splicemachine:splice_machine-${envClassifier}</include>
+			</includes>
+		</dependencySet>
+
+		<dependencySet>
+			<outputDirectory>splicemachine/jdbc-driver</outputDirectory>
+			<useStrictFiltering>false</useStrictFiltering>
+			<useTransitiveDependencies>false</useTransitiveDependencies>
+			<useProjectArtifact>false</useProjectArtifact>
+			<outputFileNameMapping>splicedriver-${artifact.baseVersion}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
+			<includes>
+                <include>com.splicemachine:db-client</include>
+			</includes>
+		</dependencySet>
+
+	</dependencySets>
+
+	<!-- MISC FILES -->
+	<fileSets>
+
+		<!-- Our module's jar -->
+		<fileSet>
+			<directory>target</directory>
+			<outputDirectory>splicemachine/lib</outputDirectory>
+			<includes>
+				<include>*.jar</include>
+			</includes>
+			<excludes>
+				<exclude>*complete.jar</exclude>
+			</excludes>
+		</fileSet>
+
+		<!-- SCRIPTS -->
+		<fileSet>
+			<directory>src/main/bin</directory>
+			<outputDirectory>splicemachine/bin</outputDirectory>
+			<fileMode>0755</fileMode>
+			<directoryMode>0755</directoryMode>
+			<includes>
+				<include>*sh</include>
+			</includes>
+		</fileSet>
+
+		<!-- DOCS -->
+		<fileSet>
+			<directory>src/main/bin</directory>
+			<outputDirectory>splicemachine</outputDirectory>
+			<fileMode>0644</fileMode>
+			<includes>
+				<include>License.txt</include>
+				<include>README</include>
+			</includes>
+		</fileSet>
+
+		<!-- DEMO DATA -->
+		<fileSet>
+			<directory>src/test/test-data/demo/demodata</directory>
+			<outputDirectory>splicemachine/demodata</outputDirectory>
+			<fileMode>0666</fileMode>
+			<directoryMode>0755</directoryMode>
+			<excludes>
+				<exclude>**/*.gz</exclude>
+			</excludes>
+		</fileSet>
+
+		<!-- DEMO DATA *.GZ: Copy binary files in separate fileSet -->
+		<fileSet>
+			<directory>src/test/test-data/demo/demodata/data</directory>
+			<outputDirectory>splicemachine/demodata/data</outputDirectory>
+			<lineEnding>keep</lineEnding>
+			<fileMode>0775</fileMode>
+			<includes>
+				<include>**/*.gz</include>
+			</includes>
+		</fileSet>
+
+		<!-- CONFIG: for some reason we currently put it in lib/ -->
+		<!-- NOTE: I am pretty sure that the properties files were put into lib/ so that they would be in the CLASSPATH -->
+		<!--       and thus "load-able" as resources at runtime. In the future, we could move the properties file to an -->
+		<!--       etc/ directory that would be added to the CLASSPATH. -->
+		<fileSet>
+			<directory>target/classes</directory>
+			<outputDirectory>splicemachine/lib</outputDirectory>
+			<includes>
+				<include>info-log4j.properties</include>
+				<include>hbase-log4j.properties</include>
+			</includes>
+		</fileSet>
+
+		<!-- CONFIG: Custom HBase config to put in lib/. -->
+		<fileSet>
+			<directory>src/main/resources</directory>
+			<outputDirectory>splicemachine/lib</outputDirectory>
+			<includes>
+				<include>splice-site.xml</include>
+			</includes>
+		</fileSet>
+	</fileSets>
+</assembly>

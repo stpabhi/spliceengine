@@ -685,13 +685,13 @@ public class SpliceAdmin extends BaseAdminProcedures{
                             String regionName=ri.getName();//Bytes.toString(ri.getRegionName());
                             int storefileSizeMB=0;
                             int memStoreSizeMB=0;
-                            int storefileIndexSizeMB=0;
+                            long storefileIndexSizeKB=0;
                             if(regionName!=null && !regionName.isEmpty()){
                                 PartitionLoad regionLoad=ri.getLoad();//regionLoadMap.get(regionName);
                                 if(regionLoad!=null){
                                     storefileSizeMB=regionLoad.getStorefileSizeMB();
                                     memStoreSizeMB=regionLoad.getMemStoreSizeMB();
-                                    storefileIndexSizeMB=regionLoad.getStorefileIndexSizeMB();
+                                    storefileIndexSizeKB=regionLoad.getStorefileIndexSizeKB();
                                 }
                             }
                             DataValueDescriptor[] cols=template.getRowArray();
@@ -702,7 +702,7 @@ public class SpliceAdmin extends BaseAdminProcedures{
                                 cols[3].setValue(allTablesInSchema.getBoolean("ISINDEX"));
                                 cols[4].setValue(storefileSizeMB);
                                 cols[5].setValue(memStoreSizeMB);
-                                cols[6].setValue(storefileIndexSizeMB);
+                                cols[6].setValue(storefileIndexSizeKB);
                             }catch(StandardException se){
                                 throw PublicAPI.wrapStandardException(se);
                             }

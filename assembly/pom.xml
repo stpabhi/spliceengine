@@ -26,7 +26,7 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>hbase_sql-${envClassifier}</artifactId>
+            <artifactId>hbase_sql_v2-${envClassifier}</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -147,9 +147,9 @@
                                         concurrentlinkedhashmap-lru,
                                         kryo-serializers,
                                         lucene-core,
-                                        hbase_pipeline-${envClassifier},
-                                        hbase_storage-${envClassifier},
-                                        hbase_sql-${envClassifier},
+                                        hbase_pipeline_v2-${envClassifier},
+                                        hbase_storage_v2-${envClassifier},
+                                        hbase_sql_v2-${envClassifier},
                                         splice_ee-${envClassifier},
                                         splice_backup-${envClassifier},
                                         splice_auth,
@@ -579,9 +579,9 @@
                                         concurrentlinkedhashmap-lru,
                                         kryo-serializers,
                                         lucene-core,
-                                        hbase_pipeline-${envClassifier},
-                                        hbase_storage-${envClassifier},
-                                        hbase_sql-${envClassifier},
+                                        hbase_pipeline_v2-${envClassifier},
+                                        hbase_storage_v2-${envClassifier},
+                                        hbase_sql_v2-${envClassifier},
                                         splice_ee-${envClassifier},
                                         splice_backup-${envClassifier},
                                         splice_auth,
