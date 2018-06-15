@@ -23,7 +23,7 @@
     <repositories>
         <repository>
             <id>cloudera</id>
-            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+            <url>http://repository.cloudera.com/artifactory/cloudera-repos/</url>
         </repository>
         <repository>
             <id>mapr</id>
